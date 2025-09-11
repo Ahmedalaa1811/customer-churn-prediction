@@ -80,16 +80,16 @@ with tab1:
     st.header("👤 Single Customer Prediction")
 
     with st.form("single_customer_form"):
-        credit_score = st.number_input("Credit Score", min_value=300, max_value=900, value=650)
+        credit_score = st.number_input("Credit Score", min_value=0, max_value=1000, value=650)
         geography = st.selectbox("Geography", ["France", "Spain", "Germany"])
         gender = st.selectbox("Gender", ["Male", "Female"])
         age = st.number_input("Age", min_value=18, max_value=100, value=35)
         tenure = st.number_input("Tenure (Years at bank)", min_value=0, max_value=50, value=5)
         balance = st.number_input("Balance", min_value=0.0, value=50000.0)
-        products = st.number_input("Number of Products", min_value=1, max_value=5, value=1)
+        products = st.number_input("Number of Products", min_value=1, max_value=100, value=1)
         has_card = st.selectbox("Has Credit Card?", [0, 1])
         active = st.selectbox("Is Active Member?", [0, 1])
-        salary = st.number_input("Estimated Salary", min_value=0.0, value=60000.0)
+        salary = st.number_input("Estimated Salary", min_value=0.0, value=200000.0)
 
         submitted = st.form_submit_button("Predict")
 
