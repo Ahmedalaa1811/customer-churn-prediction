@@ -6,3 +6,4 @@ numpy
 lightgbm
 xgboost
 seaborn
+reportlab

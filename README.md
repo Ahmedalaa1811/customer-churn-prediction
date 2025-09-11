@@ -1,4 +1,4 @@
-# Customer Churn Prediction App
+# 📊 Customer Churn Prediction App
 
 This project is a **Streamlit web app** that predicts whether customers are likely to **churn (leave)** or **stay** based on their data.  
 It was built using **scikit-learn, LightGBM, XGBoost, and RandomForest**, with the best tuned model saved and deployed.
@@ -6,10 +6,18 @@ It was built using **scikit-learn, LightGBM, XGBoost, and RandomForest**, with t
 ---
 
 ## 🚀 Features
-- Upload a CSV file with customer data.
-- Predict churn probability and churn label (0 = stays, 1 = churn).
-- Download results as a CSV file.
-- Deployable via **Streamlit Cloud** or **Docker**.
+- 🔮 **Single Prediction** → form for one customer.  
+- 📂 **Batch Prediction** → upload a CSV with customer data.  
+- 📊 **Insights Dashboard** → compact graphs with **auto-generated insights**:  
+  - Churn by Geography  
+  - Churn by Age Distribution  
+  - Churn by Gender  
+  - Churn by Number of Products  
+  - Churn by Tenure  
+- 📥 **Downloadable Reports**:  
+  - CSV with predictions  
+  - PDF with metrics, charts, and top 10 high-risk customers  
+- ☁️ **Deployable via Streamlit Cloud** or **Docker**  
 
 ---
 
@@ -40,18 +48,19 @@ http://localhost:8501
 
 ---
 
-## ☁️ Deployment
-### Option 1 — Streamlit Cloud
-1. Push this repo to GitHub.
-2. Go to [Streamlit Cloud](https://share.streamlit.io).
-3. Select your repo and deploy `app.py`.
+## ☁️ Deployment (Streamlit Cloud)
 
-### Option 2 — Docker
-```bash
-docker build -t churn-prediction .
-docker run -p 8501:8501 churn-prediction
+1. Push this repo to GitHub.  
+2. Go to [Streamlit Cloud](https://share.streamlit.io).  
+3. Click **New App** → select your GitHub repo.  
+4. Set the **entrypoint** to `app.py`.  
+5. Add a **Secrets section** if you need environment variables (not required here).  
+6. Click **Deploy** 🚀.  
+
+Your app will be live at:  
 ```
-Open [http://localhost:8501](http://localhost:8501).
+https://customer-churn-prediction-rhq6ymdj5t3xkeqnab2qnm.streamlit.app/
+```
 
 ---
 
@@ -72,23 +81,22 @@ CreditScore,Geography,Gender,Age,Tenure,Balance,NumOfProducts,HasCrCard,IsActive
 ---
 
 ## 📷 Screenshots
-
-### App Home
+### App Home  
 ![App Home](screenshots/app_home.png)
 
-### Single Customer Prediction
+### Single Customer Prediction  
 ![Single Prediction](screenshots/single_prediction.png)
 
-### Single Customer Prediction
-![Single Prediction](screenshots/File_predictions.png)
+### Batch Predictions & Insights  
+![Batch Predictions](screenshots/file_predictions.png)
 
-### Dataset Insights
-![Dataset Insights](screenshots/dashboard.png)
+### Dashboard with Insights  
+![Dashboard](screenshots/dashboard.png)
 
 ---
 
 ## 🧪 Test It Yourself
 Use the included [sample_customers.csv](sample_customers.csv) to try predictions instantly.
 ## 👨‍💻 Author
-Built during Data Science Diploma Project.  
-Contact: [LinkedIn](https://www.linkedin.com/in/ahmed-alaa-elsheikh-98a4b5182/) | [Email](ahmed.alaa181197@gmail.com)
+Built during **Data Science Diploma Project**.  
+Contact: [LinkedIn](https://www.linkedin.com/in/ahmed-alaa-elsheikh-98a4b5182/) | [Email](mailto:ahmed.alaa181197@gmail.com)

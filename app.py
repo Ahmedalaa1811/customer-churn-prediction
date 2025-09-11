@@ -3,8 +3,12 @@ import pandas as pd
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
+import io
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 
-# Load model & threshold
+# ---------------- Load Model ----------------
 model = joblib.load("models/churn_model.pkl")
 with open("models/churn_threshold.txt", "r") as f:
     threshold = float(f.read().strip())
@@ -12,104 +16,235 @@ with open("models/churn_threshold.txt", "r") as f:
 st.set_page_config(page_title="Customer Churn Prediction", layout="wide")
 st.title("📊 Customer Churn Prediction App")
 
-st.markdown("""
-Choose how you want to predict churn:
-1. Upload a CSV file with multiple customers.
-2. Enter details of a single customer manually.
-""")
+# ---------------- PDF Export Function ----------------
+def generate_pdf(churn_rate, churn_count, stay_count, fig_geo, fig_age, fig_gender, fig_products, fig_tenure, top_customers):
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
 
-# ================== SINGLE CUSTOMER FORM ==================
-st.header("👤 Single Customer Prediction")
+    # Title
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(180, 750, "Customer Churn Prediction Report")
 
-with st.form("single_customer_form"):
-    credit_score = st.number_input("Credit Score", min_value=300, max_value=900, value=650)
-    geography = st.selectbox("Geography", ["France", "Spain", "Germany"])
-    gender = st.selectbox("Gender", ["Male", "Female"])
-    age = st.number_input("Age", min_value=18, max_value=100, value=35)
-    tenure = st.number_input("Tenure (Years at bank)", min_value=0, max_value=50, value=5)
-    balance = st.number_input("Balance", min_value=0.0, value=50000.0)
-    products = st.number_input("Number of Products", min_value=1, max_value=5, value=1)
-    has_card = st.selectbox("Has Credit Card?", [0, 1])
-    active = st.selectbox("Is Active Member?", [0, 1])
-    salary = st.number_input("Estimated Salary", min_value=0.0, value=60000.0)
+    # Metrics
+    c.setFont("Helvetica", 12)
+    c.drawString(50, 710, f"Churn Rate: {churn_rate:.1f}%")
+    c.drawString(50, 690, f"Churners: {churn_count}")
+    c.drawString(50, 670, f"Non-Churners: {stay_count}")
 
-    submitted = st.form_submit_button("Predict")
+    # Page 1: Geography + Age
+    img1 = io.BytesIO(); fig_geo.savefig(img1, format="png", bbox_inches="tight"); img1.seek(0)
+    c.drawImage(ImageReader(img1), 50, 430, width=250, height=200)
 
-    if submitted:
-        single_df = pd.DataFrame([{
-            "CreditScore": credit_score,
-            "Geography": geography,
-            "Gender": gender,
-            "Age": age,
-            "Tenure": tenure,
-            "Balance": balance,
-            "NumOfProducts": products,
-            "HasCrCard": has_card,
-            "IsActiveMember": active,
-            "EstimatedSalary": salary
-        }])
+    img2 = io.BytesIO(); fig_age.savefig(img2, format="png", bbox_inches="tight"); img2.seek(0)
+    c.drawImage(ImageReader(img2), 320, 430, width=250, height=200)
 
-        prob = model.predict_proba(single_df)[:, 1][0]
-        pred = int(prob >= threshold)
+    c.showPage()
 
-        st.write(f"### Prediction: {'❌ Will Churn' if pred==1 else '✅ Will Stay'}")
-        st.write(f"**Churn Probability:** {prob:.2f}")
+    # Page 2: Gender + Products
+    img3 = io.BytesIO(); fig_gender.savefig(img3, format="png", bbox_inches="tight"); img3.seek(0)
+    c.drawImage(ImageReader(img3), 50, 430, width=250, height=200)
 
-# ================== MULTI CUSTOMER UPLOAD ==================
-st.header("📂 Predict Churn from CSV")
+    img4 = io.BytesIO(); fig_products.savefig(img4, format="png", bbox_inches="tight"); img4.seek(0)
+    c.drawImage(ImageReader(img4), 320, 430, width=250, height=200)
 
-uploaded_file = st.file_uploader("Upload customer data (CSV)", type=["csv"])
+    c.showPage()
 
-if uploaded_file is not None:
-    data = pd.read_csv(uploaded_file)
-    st.write("### Preview of Uploaded Data")
-    st.dataframe(data.head())
+    # Page 3: Tenure + Top Customers
+    img5 = io.BytesIO(); fig_tenure.savefig(img5, format="png", bbox_inches="tight"); img5.seek(0)
+    c.drawImage(ImageReader(img5), 50, 430, width=300, height=200)
 
-    # Predictions
-    probs = model.predict_proba(data)[:, 1]
-    preds = (probs >= threshold).astype(int)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(50, 400, "Top 10 High-Risk Customers:")
 
-    results = data.copy()
-    results["Churn_Probability"] = probs
-    results["Churn_Prediction"] = preds
+    c.setFont("Helvetica", 10)
+    y = 380
+    for idx, row in top_customers.iterrows():
+        c.drawString(50, y, f"Customer {idx} - Prob: {row['Churn_Probability']:.2f}")
+        y -= 15
+        if y < 50:
+            c.showPage()
+            y = 750
 
-    st.write("### Predictions")
-    st.dataframe(results)
+    c.setFont("Helvetica-Oblique", 8)
+    c.drawString(50, 30, "Generated by Customer Churn Prediction App")
 
-    # Download
-    csv = results.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="📥 Download Predictions as CSV",
-        data=csv,
-        file_name="churn_predictions.csv",
-        mime="text/csv"
-    )
+    c.save()
+    buffer.seek(0)
+    return buffer
 
-    # ================== DASHBOARD METRICS ==================
-    st.markdown("---")
-    st.header("📊 Dataset Insights")
+# ---------------- Tabs ----------------
+tab1, tab2, tab3 = st.tabs(["🔮 Single Prediction", "📂 Batch Prediction & Insights", "ℹ️ About"])
 
-    churn_rate = (results["Churn_Prediction"].mean()) * 100
-    churn_count = results["Churn_Prediction"].sum()
-    stay_count = len(results) - churn_count
+# ---------------- Tab 1: Single Prediction ----------------
+with tab1:
+    st.header("👤 Single Customer Prediction")
 
-    st.metric("Churn Rate", f"{churn_rate:.1f}%")
-    st.metric("Churners", churn_count)
-    st.metric("Non-Churners", stay_count)
+    with st.form("single_customer_form"):
+        credit_score = st.number_input("Credit Score", min_value=300, max_value=900, value=650)
+        geography = st.selectbox("Geography", ["France", "Spain", "Germany"])
+        gender = st.selectbox("Gender", ["Male", "Female"])
+        age = st.number_input("Age", min_value=18, max_value=100, value=35)
+        tenure = st.number_input("Tenure (Years at bank)", min_value=0, max_value=50, value=5)
+        balance = st.number_input("Balance", min_value=0.0, value=50000.0)
+        products = st.number_input("Number of Products", min_value=1, max_value=5, value=1)
+        has_card = st.selectbox("Has Credit Card?", [0, 1])
+        active = st.selectbox("Is Active Member?", [0, 1])
+        salary = st.number_input("Estimated Salary", min_value=0.0, value=60000.0)
 
-    # Plots
-# Smaller side-by-side dashboards
-    col1, col2 = st.columns(2)
+        submitted = st.form_submit_button("Predict")
 
-    with col1:
-        st.subheader("Churn by Geography")
-        fig, ax = plt.subplots(figsize=(4,3))
-        sns.countplot(data=results, x="Geography", hue="Churn_Prediction", ax=ax)
-        st.pyplot(fig)
+        if submitted:
+            single_df = pd.DataFrame([{
+                "CreditScore": credit_score,
+                "Geography": geography,
+                "Gender": gender,
+                "Age": age,
+                "Tenure": tenure,
+                "Balance": balance,
+                "NumOfProducts": products,
+                "HasCrCard": has_card,
+                "IsActiveMember": active,
+                "EstimatedSalary": salary
+            }])
 
-    with col2:
-        st.subheader("Age Distribution by Churn")
-        fig2, ax2 = plt.subplots(figsize=(4,3))
-        sns.kdeplot(data=results, x="Age", hue="Churn_Prediction", fill=True, ax=ax2)
-        st.pyplot(fig2)
+            prob = model.predict_proba(single_df)[:, 1][0]
+            pred = int(prob >= threshold)
 
+            st.write(f"### Prediction: {'❌ Will Churn' if pred==1 else '✅ Will Stay'}")
+            st.write(f"**Churn Probability:** {prob:.2f}")
+
+# ---------------- Tab 2: Batch Prediction & Insights ----------------
+with tab2:
+    st.header("📂 Upload File for Predictions & Insights")
+
+    uploaded_file = st.file_uploader("Upload customer data (CSV)", type=["csv"])
+
+    if uploaded_file is not None:
+        data = pd.read_csv(uploaded_file)
+        st.write("### Preview of Uploaded Data")
+        st.dataframe(data.head())
+
+        # Predictions
+        probs = model.predict_proba(data)[:, 1]
+        preds = (probs >= threshold).astype(int)
+
+        results = data.copy()
+        results["Churn_Probability"] = probs
+        results["Churn_Prediction"] = preds
+
+        st.write("### Predictions")
+        st.dataframe(results)
+
+        # Download CSV
+        csv = results.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="📥 Download Predictions as CSV",
+            data=csv,
+            file_name="churn_predictions.csv",
+            mime="text/csv"
+        )
+
+        # Insights
+        st.markdown("---")
+        st.header("📊 Dataset Insights")
+
+        churn_rate = (results["Churn_Prediction"].mean()) * 100
+        churn_count = results["Churn_Prediction"].sum()
+        stay_count = len(results) - churn_count
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Churn Rate", f"{churn_rate:.1f}%")
+        col2.metric("Churners", churn_count)
+        col3.metric("Non-Churners", stay_count)
+
+        # Row 1: Geography & Age
+        col4, col5 = st.columns(2)
+        with col4:
+            st.subheader("Churn by Geography")
+            fig_geo, ax = plt.subplots(figsize=(3,2))
+            sns.countplot(data=results, x="Geography", hue="Churn_Prediction", ax=ax)
+            st.pyplot(fig_geo)
+            st.caption("Shows churn distribution by country.")
+            churn_geo = results.groupby("Geography")["Churn_Prediction"].mean()
+            risky_geo = churn_geo.idxmax()
+            st.info(f"💡 Insight: Customers in **{risky_geo}** have the highest churn risk.")
+
+        with col5:
+            st.subheader("Age Distribution")
+            fig_age, ax2 = plt.subplots(figsize=(3,2))
+            sns.kdeplot(data=results, x="Age", hue="Churn_Prediction", fill=True, ax=ax2)
+            st.pyplot(fig_age)
+            st.caption("Younger vs older customers may churn differently.")
+            avg_churn_age = results.groupby(pd.cut(results["Age"], bins=3))["Churn_Prediction"].mean()
+            st.info(f"💡 Insight: Churn is highest in the age group: **{avg_churn_age.idxmax()}**.")
+
+        # Row 2: Gender & Products
+        col6, col7 = st.columns(2)
+        with col6:
+            st.subheader("Churn by Gender")
+            fig_gender, ax3 = plt.subplots(figsize=(3,2))
+            sns.countplot(data=results, x="Gender", hue="Churn_Prediction", ax=ax3)
+            st.pyplot(fig_gender)
+            st.caption("Compares churn between male and female customers.")
+            churn_gender = results.groupby("Gender")["Churn_Prediction"].mean()
+            risky_gender = churn_gender.idxmax()
+            st.info(f"💡 Insight: **{risky_gender}** customers have higher churn rates.")
+
+        with col7:
+            st.subheader("Churn by Products")
+            fig_products, ax4 = plt.subplots(figsize=(3,2))
+            sns.countplot(data=results, x="NumOfProducts", hue="Churn_Prediction", ax=ax4)
+            st.pyplot(fig_products)
+            st.caption("Shows churn by number of products owned.")
+            churn_products = results.groupby("NumOfProducts")["Churn_Prediction"].mean()
+            risky_products = churn_products.idxmax()
+            st.info(f"💡 Insight: Customers with **{risky_products} products** churn the most.")
+
+        # Row 3: Tenure (make smaller)
+        col8, col9 = st.columns([1,1])  # split into two equal halves
+        with col8:
+            st.subheader("Churn by Tenure")
+            fig_tenure, ax5 = plt.subplots(figsize=(3,2))  # smaller figure size
+            sns.histplot(data=results, x="Tenure", hue="Churn_Prediction", multiple="stack", ax=ax5)
+            st.pyplot(fig_tenure)
+            st.caption("Tenure = years at the bank. Longer tenure usually means lower churn.")
+            churn_tenure = results.groupby("Tenure")["Churn_Prediction"].mean()
+            risky_tenure = churn_tenure.idxmax()
+            st.info(f"💡 Insight: Customers with **{risky_tenure} years** tenure have the highest churn risk.")
+
+
+        # Top risky customers
+        top_customers = results.sort_values(by="Churn_Probability", ascending=False).head(10)
+
+        # PDF Report
+        pdf_buffer = generate_pdf(
+            churn_rate, churn_count, stay_count,
+            fig_geo, fig_age, fig_gender, fig_products, fig_tenure,
+            top_customers
+        )
+        st.download_button(
+            label="📥 Download PDF Report",
+            data=pdf_buffer,
+            file_name="churn_report.pdf",
+            mime="application/pdf"
+        )
+
+
+# ---------------- Tab 3: About ----------------
+with tab3:
+    st.header("ℹ️ About This App")
+    st.write("""
+    This app predicts **customer churn** using a machine learning model trained on
+    historical banking customer data.
+
+    ### Features:
+    - 🔮 Single-customer prediction form
+    - 📂 Batch predictions from CSV
+    - 📊 Dataset insights with metrics and charts
+    - 📥 Downloadable CSV + PDF report (with top risky customers and extra graphs)
+
+    ### Author
+    Ahmed ALAA-ELSHEIKH 
+    [LinkedIn](https://www.linkedin.com/in/ahmed-alaa-elsheikh-98a4b5182/) | 
+    [Email](mailto:ahmed.alaa181197@gmail.com)
+    """)
