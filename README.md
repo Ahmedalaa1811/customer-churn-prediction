@@ -20,6 +20,22 @@ It was built using **scikit-learn, LightGBM, XGBoost, and RandomForest**, with t
 - ☁️ **Deployable via Streamlit Cloud** or **Docker**  
 
 ---
+## 🧠 Algorithms & Performance
+
+Several machine learning algorithms were tested to predict churn. Below are the results:
+
+| Model                   | Accuracy | Precision | Recall | F1-score |
+|--------------------------|----------|-----------|--------|----------|
+| RandomForest (Tuned)     | 0.7505   | 0.439     | **0.816** | 0.571 |
+| XGBoost                  | 0.8145   | 0.536     | 0.656  | 0.590 |
+| LightGBM (Final Model)   | 0.8140   | 0.533     | 0.693  | **0.603** |
+
+- **RandomForest** → strongest at catching churners (high recall).  
+- **XGBoost** → strong balance but weaker recall.  
+- **LightGBM** → best balance (highest F1-score) and chosen as **final model**.  
+- The deployed app uses **LightGBM with threshold = 0.4**, giving:  
+  - **Recall ≈ 72%** (catches 72% of churners)  
+  - **Precision ≈ 53%** (moderate false alarms)  
 
 ## 📦 Installation
 
