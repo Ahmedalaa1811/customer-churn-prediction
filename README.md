@@ -1,78 +1,76 @@
-# 📊 Customer Churn Prediction  
+# Customer Churn Prediction App
 
-## 🚀 Project Overview  
-This project predicts **customer churn** (whether a customer will leave the bank) using machine learning.  
-We trained, tuned, and evaluated models, then deployed a **Streamlit app** for easy usage.  
-
----
-
-## ✅ Achievements  
-
-### 🔹 Data & Preprocessing  
-- Dataset: **10,000 bank customers** with demographic & account features.  
-- Dropped irrelevant columns: `RowNumber`, `CustomerId`, `Surname`.  
-- Preprocessing pipeline:  
-  - **Numerical features** → imputed + scaled.  
-  - **Categorical features** → imputed + one-hot encoded.  
+This project is a **Streamlit web app** that predicts whether customers are likely to **churn (leave)** or **stay** based on their data.  
+It was built using **scikit-learn, LightGBM, XGBoost, and RandomForest**, with the best tuned model saved and deployed.
 
 ---
 
-### 🔹 Modeling  
-- Baseline: **RandomForestClassifier**.  
-- Imbalance handled with `class_weight={0:1, 1:3}`.  
-- Models compared: RandomForest, XGBoost, LightGBM.  
-- Evaluation metrics: **ROC-AUC, Precision-Recall, F1, Confusion Matrix**.  
+## 🚀 Features
+- Upload a CSV file with customer data.
+- Predict churn probability and churn label (0 = stays, 1 = churn).
+- Download results as a CSV file.
+- Deployable via **Streamlit Cloud** or **Docker**.
 
 ---
 
-### 🔹 Key Results  
-- **Final choice:** RandomForest (tuned) with threshold **0.4**.  
-- **Performance on test set (threshold=0.4):**  
-  - Recall (churners): **73%** → catches ~3 out of 4 churners.  
-  - Precision: **55%** → about half of flagged are true churners.  
-  - F1-score: **0.62**.  
-  - Accuracy: **82%**.  
-- Confusion Matrix:  
-  - True Negatives: 1346  
-  - False Positives: 247  
-  - False Negatives: 111  
-  - True Positives: 296  
+## 📦 Installation
 
----
-
-### 🔹 Deployment  
-- Saved pipeline as `churn_model.pkl`.  
-- Chosen threshold saved in `churn_threshold.txt`.  
-- Built **Streamlit app (`app.py`)**:  
-  - Upload CSV of customers.  
-  - Get churn probabilities & predictions.  
-  - Download results as CSV.  
-
----
-
-## 🛠️ Usage  
-
-### 1. Run Jupyter Notebook  
-Train the model and save it:  
+Clone this repository:
 ```bash
-jupyter notebook Churn_Prediction_Bank_Final.ipynb
+git clone https://github.com/Ahmedalaa1811/customer-churn-prediction.git
+cd customer-churn-prediction
 ```
 
-### 2. Launch Streamlit App  
+Install requirements:
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## ▶️ Run Locally
 ```bash
 streamlit run app.py
 ```
 
-### 3. Upload Data  
-- Use `churn_test_customers.csv` (provided) or your own customer dataset.  
-- The app will output:  
-  - **Churn probability**  
-  - **Final prediction (0 = stay, 1 = churn)**  
+Then open in your browser:
+```
+http://localhost:8501
+```
 
 ---
 
-## 📈 Next Steps  
-- Host app on **Streamlit Cloud / Heroku / AWS**.  
-- Add **explainability (SHAP feature importance)**.  
-- Automate **batch predictions** for CRM integration.  
-- Monitor model drift & re-train periodically.  
+## ☁️ Deployment
+### Option 1 — Streamlit Cloud
+1. Push this repo to GitHub.
+2. Go to [Streamlit Cloud](https://share.streamlit.io).
+3. Select your repo and deploy `app.py`.
+
+### Option 2 — Docker
+```bash
+docker build -t churn-prediction .
+docker run -p 8501:8501 churn-prediction
+```
+Open [http://localhost:8501](http://localhost:8501).
+
+---
+
+## 📊 Example Input
+```csv
+CreditScore,Geography,Gender,Age,Tenure,Balance,NumOfProducts,HasCrCard,IsActiveMember,EstimatedSalary
+619,France,Female,42,2,0.00,1,1,1,101348.88
+608,Spain,Female,41,1,83807.86,1,0,1,112542.58
+```
+
+## 📊 Example Output
+```csv
+CreditScore,Geography,Gender,Age,Tenure,Balance,NumOfProducts,HasCrCard,IsActiveMember,EstimatedSalary,Churn_Probability,Churn_Prediction
+619,France,Female,42,2,0.00,1,1,1,101348.88,0.82,1
+608,Spain,Female,41,1,83807.86,1,0,1,112542.58,0.12,0
+```
+
+---
+
+## 👨‍💻 Author
+Built during Data Science Diploma Project.  
+Contact: [LinkedIn](https://www.linkedin.com/in/ahmed-alaa-elsheikh-98a4b5182/) | [Email](ahmed.alaa181197@gmail.com)
