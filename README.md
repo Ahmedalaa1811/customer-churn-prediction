@@ -100,6 +100,10 @@ CreditScore,Geography,Gender,Age,Tenure,Balance,NumOfProducts,HasCrCard,IsActive
 ---
 
 ## 📷 Screenshots
+### Model Numbers  
+![Model Numbers](screenshots/model_performance_comparison.png)
+
+
 ### App Home  
 ![App Home](screenshots/app_home.png)
 
