@@ -24,18 +24,21 @@ It was built using **scikit-learn, LightGBM, XGBoost, and RandomForest**, with t
 
 Several machine learning algorithms were tested to predict churn. Below are the results:
 
-| Model                   | Accuracy | Precision | Recall | F1-score |
-|--------------------------|----------|-----------|--------|----------|
-| RandomForest (Tuned)     | 0.7505   | 0.439     | **0.816** | 0.571 |
-| XGBoost                  | 0.8145   | 0.536     | 0.656  | 0.590 |
-| LightGBM (Final Model)   | 0.8140   | 0.533     | 0.693  | **0.603** |
+| Model                        | Accuracy | Precision | Recall | F1-score |
+|-------------------------------|----------|-----------|--------|----------|
+| RandomForest (Tuned @ 0.5)    | **0.85** | 0.65      | 0.59   | 0.62 |
+| RandomForest (Final @ 0.4)    | 0.82     | 0.55      | **0.73** | 0.62 |
+| XGBoost                       | 0.8145   | 0.536     | 0.656  | 0.590 |
+| LightGBM                      | 0.8140   | 0.533     | 0.693  | **0.603** |
 
-- **RandomForest** → strongest at catching churners (high recall).  
-- **XGBoost** → strong balance but weaker recall.  
-- **LightGBM** → best balance (highest F1-score) and chosen as **final model**.  
-- The deployed app uses **LightGBM with threshold = 0.4**, giving:  
-  - **Recall ≈ 72%** (catches 72% of churners)  
-  - **Precision ≈ 53%** (moderate false alarms)  
+### 📌 Explanation
+- **RandomForest @ 0.5** → higher precision (65%) but missed many churners (recall = 59%).  
+- **RandomForest @ 0.4 (Final)** → best trade-off with **Recall = 73%** and Precision = 55%, chosen as the deployed model.  
+- **LightGBM** → had the highest F1-score but weaker at detecting churners.  
+- **XGBoost** → more balanced, but weaker recall than RandomForest.  
+
+✅ The deployed model in this app is **RandomForest with threshold = 0.4**, prioritizing recall to catch more churners.
+
 
 ## 📦 Installation
 
