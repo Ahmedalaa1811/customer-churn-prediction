@@ -16,27 +16,57 @@ with open("models/churn_threshold.txt", "r") as f:
 st.set_page_config(page_title="Customer Churn Prediction", layout="wide")
 st.title("📊 Customer Churn Prediction App")
 
+# ---------------- Narrative Generator ----------------
+def generate_narrative(results):
+    churn_rate = results["Churn_Prediction"].mean() * 100
+    churn_geo = results.groupby("Geography")["Churn_Prediction"].mean()
+    churn_gender = results.groupby("Gender")["Churn_Prediction"].mean()
+    churn_products = results.groupby("NumOfProducts")["Churn_Prediction"].mean()
+    churn_tenure = results.groupby("Tenure")["Churn_Prediction"].mean()
+
+    narrative = f"Overall churn rate is {churn_rate:.1f}%, "
+
+    risky_geo = churn_geo.idxmax()
+    narrative += f"Customers in {risky_geo} show the highest churn risk,\n "
+
+    risky_gender = churn_gender.idxmax()
+    narrative += f"{risky_gender} customers are more likely to churn, "
+
+    risky_products = churn_products.idxmax()
+    narrative += f"Customers with {risky_products} products churn the most,\n "
+
+    risky_tenure = churn_tenure.idxmax()
+    narrative += f"Churn is highest among customers with {risky_tenure} years of tenure. "
+
+    return narrative
+
 # ---------------- PDF Export Function ----------------
-def generate_pdf(churn_rate, churn_count, stay_count, fig_geo, fig_age, fig_gender, fig_products, fig_tenure, top_customers):
+def generate_pdf(churn_rate, churn_count, stay_count, fig_geo, fig_age, fig_gender, fig_products, fig_tenure, top_customers, narrative):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
 
     # Title
     c.setFont("Helvetica-Bold", 16)
-    c.drawString(180, 750, "Customer Churn Prediction Report")
+    c.drawString(150, 750, "Customer Churn Prediction Report")
+
+    # Narrative Summary
+    c.setFont("Helvetica", 11)
+    text_obj = c.beginText(50, 720)
+    text_obj.textLines(f"Executive Summary:\n{narrative}")
+    c.drawText(text_obj)
 
     # Metrics
     c.setFont("Helvetica", 12)
-    c.drawString(50, 710, f"Churn Rate: {churn_rate:.1f}%")
-    c.drawString(50, 690, f"Churners: {churn_count}")
-    c.drawString(50, 670, f"Non-Churners: {stay_count}")
+    c.drawString(50, 630, f"Churn Rate: {churn_rate:.1f}%")
+    c.drawString(50, 610, f"Churners: {churn_count}")
+    c.drawString(50, 590, f"Non-Churners: {stay_count}")
 
     # Page 1: Geography + Age
     img1 = io.BytesIO(); fig_geo.savefig(img1, format="png", bbox_inches="tight"); img1.seek(0)
-    c.drawImage(ImageReader(img1), 50, 430, width=250, height=200)
+    c.drawImage(ImageReader(img1), 50, 380, width=250, height=200)
 
     img2 = io.BytesIO(); fig_age.savefig(img2, format="png", bbox_inches="tight"); img2.seek(0)
-    c.drawImage(ImageReader(img2), 320, 430, width=250, height=200)
+    c.drawImage(ImageReader(img2), 320, 380, width=250, height=200)
 
     c.showPage()
 
@@ -85,8 +115,8 @@ with tab1:
         gender = st.selectbox("Gender", ["Male", "Female"])
         age = st.number_input("Age", min_value=18, max_value=100, value=35)
         tenure = st.number_input("Tenure (Years at bank)", min_value=0, max_value=50, value=5)
-        balance = st.number_input("Balance", min_value=0.0, value=50000.0)
-        products = st.number_input("Number of Products", min_value=1, max_value=100, value=1)
+        balance = st.number_input("Balance", min_value=0.0, value=5000000.0)
+        products = st.number_input("Number of Products", min_value=1, max_value=20, value=1)
         has_card = st.selectbox("Has Credit Card?", [0, 1])
         active = st.selectbox("Is Active Member?", [0, 1])
         salary = st.number_input("Estimated Salary", min_value=0.0, value=200000.0)
@@ -164,19 +194,11 @@ with tab2:
             fig_geo, ax = plt.subplots(figsize=(3,2))
             sns.countplot(data=results, x="Geography", hue="Churn_Prediction", ax=ax)
             st.pyplot(fig_geo)
-            st.caption("Shows churn distribution by country.")
-            churn_geo = results.groupby("Geography")["Churn_Prediction"].mean()
-            risky_geo = churn_geo.idxmax()
-            st.info(f"💡 Insight: Customers in **{risky_geo}** have the highest churn risk.")
-
         with col5:
             st.subheader("Age Distribution")
             fig_age, ax2 = plt.subplots(figsize=(3,2))
             sns.kdeplot(data=results, x="Age", hue="Churn_Prediction", fill=True, ax=ax2)
             st.pyplot(fig_age)
-            st.caption("Younger vs older customers may churn differently.")
-            avg_churn_age = results.groupby(pd.cut(results["Age"], bins=3))["Churn_Prediction"].mean()
-            st.info(f"💡 Insight: Churn is highest in the age group: **{avg_churn_age.idxmax()}**.")
 
         # Row 2: Gender & Products
         col6, col7 = st.columns(2)
@@ -185,20 +207,11 @@ with tab2:
             fig_gender, ax3 = plt.subplots(figsize=(3,2))
             sns.countplot(data=results, x="Gender", hue="Churn_Prediction", ax=ax3)
             st.pyplot(fig_gender)
-            st.caption("Compares churn between male and female customers.")
-            churn_gender = results.groupby("Gender")["Churn_Prediction"].mean()
-            risky_gender = churn_gender.idxmax()
-            st.info(f"💡 Insight: **{risky_gender}** customers have higher churn rates.")
-
         with col7:
             st.subheader("Churn by Products")
             fig_products, ax4 = plt.subplots(figsize=(3,2))
             sns.countplot(data=results, x="NumOfProducts", hue="Churn_Prediction", ax=ax4)
             st.pyplot(fig_products)
-            st.caption("Shows churn by number of products owned.")
-            churn_products = results.groupby("NumOfProducts")["Churn_Prediction"].mean()
-            risky_products = churn_products.idxmax()
-            st.info(f"💡 Insight: Customers with **{risky_products} products** churn the most.")
 
         # Row 3: Tenure (make smaller)
         col8, col9 = st.columns([1,1])  # split into two equal halves
@@ -207,28 +220,24 @@ with tab2:
             fig_tenure, ax5 = plt.subplots(figsize=(3,2))  # smaller figure size
             sns.histplot(data=results, x="Tenure", hue="Churn_Prediction", multiple="stack", ax=ax5)
             st.pyplot(fig_tenure)
-            st.caption("Tenure = years at the bank. Longer tenure usually means lower churn.")
-            churn_tenure = results.groupby("Tenure")["Churn_Prediction"].mean()
-            risky_tenure = churn_tenure.idxmax()
-            st.info(f"💡 Insight: Customers with **{risky_tenure} years** tenure have the highest churn risk.")
 
+
+        # Narrative
+        st.subheader("📖 Automated Insights Report")
+        narrative = generate_narrative(results)
+        st.write(narrative)
 
         # Top risky customers
         top_customers = results.sort_values(by="Churn_Probability", ascending=False).head(10)
 
         # PDF Report
-        pdf_buffer = generate_pdf(
-            churn_rate, churn_count, stay_count,
-            fig_geo, fig_age, fig_gender, fig_products, fig_tenure,
-            top_customers
-        )
+        pdf_buffer = generate_pdf(churn_rate, churn_count, stay_count, fig_geo, fig_age, fig_gender, fig_products, fig_tenure, top_customers, narrative)
         st.download_button(
             label="📥 Download PDF Report",
             data=pdf_buffer,
             file_name="churn_report.pdf",
             mime="application/pdf"
         )
-
 
 # ---------------- Tab 3: About ----------------
 with tab3:
@@ -240,11 +249,11 @@ with tab3:
     ### Features:
     - 🔮 Single-customer prediction form
     - 📂 Batch predictions from CSV
-    - 📊 Dataset insights with metrics and charts
-    - 📥 Downloadable CSV + PDF report (with top risky customers and extra graphs)
+    - 📊 Dataset insights with metrics, charts, and narrative
+    - 📥 Downloadable CSV + PDF report (with executive summary and top risky customers)
 
     ### Author
-    Ahmed ALAA-ELSHEIKH 
+    Ahmed Alaa Els  
     [LinkedIn](https://www.linkedin.com/in/ahmed-alaa-elsheikh-98a4b5182/) | 
     [Email](mailto:ahmed.alaa181197@gmail.com)
     """)
