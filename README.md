@@ -71,6 +71,24 @@ CreditScore,Geography,Gender,Age,Tenure,Balance,NumOfProducts,HasCrCard,IsActive
 
 ---
 
+## 📷 Screenshots
+
+### App Home
+![App Home](screenshots/app_home.png)
+
+### Single Customer Prediction
+![Single Prediction](screenshots/single_prediction.png)
+
+### Single Customer Prediction
+![Single Prediction](screenshots/File_predictions.png)
+
+### Dataset Insights
+![Dataset Insights](screenshots/dashboard.png)
+
+---
+
+## 🧪 Test It Yourself
+Use the included [sample_customers.csv](sample_customers.csv) to try predictions instantly.
 ## 👨‍💻 Author
 Built during Data Science Diploma Project.  
 Contact: [LinkedIn](https://www.linkedin.com/in/ahmed-alaa-elsheikh-98a4b5182/) | [Email](ahmed.alaa181197@gmail.com)
