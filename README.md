@@ -1,4 +1,4 @@
-# 📊 Customer Churn Prediction App
+# 📊 Customer Churn Prediction App — Pro Edition
 
 This project is a **Streamlit web app** that predicts whether customers are likely to **churn (leave)** or **stay** based on their data.  
 It was built using **scikit-learn, LightGBM, XGBoost, and RandomForest**, with the best tuned model saved and deployed.
@@ -6,7 +6,7 @@ It was built using **scikit-learn, LightGBM, XGBoost, and RandomForest**, with t
 ---
 
 ## 🚀 Features
-- 🔮 **Single Prediction** → form for one customer.  
+- 👤 **Single Prediction** → form for one customer.  
 - 📂 **Batch Prediction** → upload a CSV with customer data.  
 - 📊 **Insights Dashboard** → compact graphs with **auto-generated insights**:  
   - Churn by Geography  
@@ -14,12 +14,19 @@ It was built using **scikit-learn, LightGBM, XGBoost, and RandomForest**, with t
   - Churn by Gender  
   - Churn by Number of Products  
   - Churn by Tenure  
+- 🔮 **Explainability with SHAP**:  
+  - Friendly feature names  
+  - Local explanations (waterfall plots)  
+- 📖 **Narrative Generator** → auto executive summaries.  
 - 📥 **Downloadable Reports**:  
   - CSV with predictions  
-  - PDF with metrics, charts, and top 10 high-risk customers  
-- ☁️ **Deployable via Streamlit Cloud** or **Docker**  
+  - PDF with sharp charts + top 10 high-risk customers.  
+- ⚙️ **Threshold Optimization** → cost-based tuning for better decisions.  
+- 📈 **Executive KPIs** → estimate revenue at risk and churn impact.  
+- ☁️ **Deployable via Streamlit Cloud** or **Docker**.  
 
 ---
+
 ## 🧠 Algorithms & Performance
 
 Several machine learning algorithms were tested to predict churn. Below are the results:
@@ -39,6 +46,7 @@ Several machine learning algorithms were tested to predict churn. Below are the 
 
 ✅ The deployed model in this app is **RandomForest with threshold = 0.4**, prioritizing recall to catch more churners.
 
+---
 
 ## 📦 Installation
 
@@ -103,7 +111,6 @@ CreditScore,Geography,Gender,Age,Tenure,Balance,NumOfProducts,HasCrCard,IsActive
 ### Model Numbers  
 ![Model Numbers](screenshots/model_performance_comparison.png)
 
-
 ### App Home  
 ![App Home](screenshots/app_home.png)
 
@@ -116,10 +123,19 @@ CreditScore,Geography,Gender,Age,Tenure,Balance,NumOfProducts,HasCrCard,IsActive
 ### Dashboard with Insights  
 ![Dashboard](screenshots/dashboard.png)
 
+### Explainability (SHAP)  
+![SHAP Explainability](screenshots/shap_explainability.png)
+
+### PDF Export Example  
+![PDF Export](screenshots/pdf_report.png)
+
 ---
 
 ## 🧪 Test It Yourself
 Use the included [sample_customers.csv](sample_customers.csv) to try predictions instantly.
+
+---
+
 ## 👨‍💻 Author
 Built during **Data Science Diploma Project**.  
 Contact: [LinkedIn](https://www.linkedin.com/in/ahmed-alaa-elsheikh-98a4b5182/) | [Email](mailto:ahmed.alaa181197@gmail.com)
