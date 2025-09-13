@@ -130,7 +130,10 @@ CreditScore,Geography,Gender,Age,Tenure,Balance,NumOfProducts,HasCrCard,IsActive
 ---
 
 ## 🧪 Test It Yourself
-Use the included [sample_customers.csv](sample_customers.csv) to try predictions instantly.
+#### Large Data
+Use the included [sample_customers.csv](data/churn_test_large.csv) to try predictions instantly.
+#### Small Data
+Use the included [sample_customers.csv](data/churn_test_customers) to try predictions instantly.
 
 ---
 
