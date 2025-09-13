@@ -137,7 +137,10 @@ Use the included [sample_customers.csv](data/churn_test_customers.csv) to try pr
 
 ---
 
-## 👨‍💻 Author
-**Name:** Ahmed ALAA-ELSHEIKH 
+## 👨‍💻 Author  
+
+**Name:** Ahmed ALAA-ELSHEIKH  
 Built during **Data Science Diploma Project**.  
-Contact: [LinkedIn](https://www.linkedin.com/in/ahmed-alaa-elsheikh-98a4b5182/) | [Email](mailto:ahmed.alaa181197@gmail.com)
+
+**Contact:** [LinkedIn](https://www.linkedin.com/in/ahmed-alaa-elsheikh-98a4b5182/) | [Email](mailto:ahmed.alaa181197@gmail.com)
+
