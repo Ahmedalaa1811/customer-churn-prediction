@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import shap
 from datetime import datetime
-from sklearn.metrics import confusion_matrix
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
@@ -41,20 +40,18 @@ def generate_narrative(results: pd.DataFrame) -> str:
     churn_tenure = results.groupby("Tenure")["Churn_Prediction"].mean()
 
     narrative = f"Overall churn rate is {churn_rate:.1f}%, "
-
-    # if len(churn_geo):
-    #     narrative += f"Highest churn is in {churn_geo.idxmax()}, "
-    # if len(churn_gender):
-    #     narrative += f"{churn_gender.idxmax()} customers churn more, \n"
-    # if len(churn_products):
-    #     narrative += f"Customers with {int(churn_products.idxmax())} products churn the most, "
-    # if len(churn_tenure):
-    #     narrative += f"Churn peaks at {int(churn_tenure.idxmax())} years of tenure."
-
+    if len(churn_geo):
+        narrative += f"Highest churn is in {churn_geo.idxmax()}, "
+    if len(churn_gender):
+        narrative += f"{churn_gender.idxmax()} customers churn more, "
+    if len(churn_products):
+        narrative += f"Customers with {int(churn_products.idxmax())} products churn the most, "
+    if len(churn_tenure):
+        narrative += f"Churn peaks at {int(churn_tenure.idxmax())} years of tenure."
     return narrative
 
 # =========================
-# Plot Helper (for Streamlit + PDF)
+# Plot Helper
 # =========================
 def save_and_show(fig, width=250, height=200):
     buf = io.BytesIO()
@@ -68,40 +65,64 @@ def save_and_show(fig, width=250, height=200):
 # =========================
 def generate_pdf(churn_rate, churn_count, stay_count,
                  geo_buf, age_buf, gender_buf, products_buf, tenure_buf,
-                 top_customers):
+                 top_customers, kpi_text, threshold_buf):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
 
+    # ---------------- Cover / Summary ----------------
     c.setFont("Helvetica-Bold", 16)
-    c.drawString(100, 750, "Customer Churn Prediction Report")
+    c.drawString(150, 750, "Customer Churn Prediction Report")
 
-    # c.setFont("Helvetica", 11)
-    # text_obj = c.beginText(50, 720)
-    # text_obj.textLines(f"Executive Summary ({datetime.now().strftime('%Y-%m-%d %H:%M')}):\n{narrative}")
-    # c.drawText(text_obj)
+    c.setFont("Helvetica", 10)
+    c.drawString(50, 730, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
 
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, 700, "Executive KPIs")
     c.setFont("Helvetica", 12)
-    c.drawString(50, 650, f"Churn Rate: {churn_rate:.1f}%")
-    c.drawString(50, 630, f"Churners: {churn_count}")
-    c.drawString(50, 610, f"Non-Churners: {stay_count}")
-
-    # Page 1: Geography + Age
-    c.drawImage(ImageReader(geo_buf), 50, 360, width=250, height=220)
-    c.drawImage(ImageReader(age_buf), 320, 360, width=250, height=220)
-    c.showPage()
-
-    # Page 2: Gender + Products
-    c.drawImage(ImageReader(gender_buf), 50, 420, width=250, height=220)
-    c.drawImage(ImageReader(products_buf), 320, 420, width=250, height=220)
-    c.showPage()
-
-    # Page 3: Tenure + Top Customers
-    c.drawImage(ImageReader(tenure_buf), 50, 420, width=300, height=220)
+    c.drawString(50, 680, kpi_text["customers"])
+    c.drawString(50, 660, kpi_text["revenue"])
 
     c.setFont("Helvetica-Bold", 12)
-    c.drawString(50, 390, "Top 10 High-Risk Customers:")
+    c.drawString(50, 630, "Churn Overview")
+    c.setFont("Helvetica", 11)
+    c.drawString(50, 610, f"Churn Rate: {churn_rate:.1f}%")
+    c.drawString(50, 595, f"Churners: {churn_count}")
+    c.drawString(50, 580, f"Non-Churners: {stay_count}")
+
+    c.showPage()
+
+    # ---------------- Threshold Optimization ----------------
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, 750, "Threshold Optimization Analysis")
     c.setFont("Helvetica", 10)
-    y = 370
+    c.drawString(50, 730, "The curve below shows expected cost across thresholds. "
+                          "The optimal threshold minimizes total business cost.")
+
+    c.drawImage(ImageReader(threshold_buf), 50, 380, width=500, height=300)
+    c.showPage()
+
+    # ---------------- Churn Insights ----------------
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, 750, "Churn Insights by Feature")
+
+    c.drawImage(ImageReader(geo_buf), 50, 500, width=250, height=200)
+    c.drawImage(ImageReader(age_buf), 320, 500, width=250, height=200)
+
+    c.drawImage(ImageReader(gender_buf), 50, 260, width=250, height=200)
+    c.drawImage(ImageReader(products_buf), 320, 260, width=250, height=200)
+
+    c.showPage()
+
+    # ---------------- Tenure + Top Customers ----------------
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, 750, "Tenure & High-Risk Customers")
+
+    c.drawImage(ImageReader(tenure_buf), 50, 450, width=300, height=200)
+
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(50, 420, "Top 10 High-Risk Customers:")
+    c.setFont("Helvetica", 10)
+    y = 400
     for idx, row in top_customers.iterrows():
         c.drawString(50, y, f"Customer {idx} — Prob: {row['Churn_Probability']:.2f}")
         y -= 15
@@ -109,6 +130,7 @@ def generate_pdf(churn_rate, churn_count, stay_count,
             c.showPage()
             y = 750
 
+    # ---------------- Footer ----------------
     c.setFont("Helvetica-Oblique", 8)
     c.drawString(50, 30, "Generated by Churn Prediction App — Pro Edition")
 
@@ -227,25 +249,20 @@ with tabs[1]:
             products_buf = save_and_show(fig_products)
 
         # Row 3: Tenure
-# Centered Tenure plot
-        col_left, col_center, col_right = st.columns([1,3,1])  # center column is wider
+        col_left, col_center, col_right = st.columns([1,3,1])
         with col_center:
             fig_tenure, ax5 = plt.subplots(figsize=(5,3))
             sns.histplot(data=results, x="Tenure", hue="Churn_Prediction", multiple="stack", ax=ax5)
             tenure_buf = save_and_show(fig_tenure)
 
-
+        # Narrative
         narrative = generate_narrative(results)
         st.subheader("📖 Narrative")
         st.write(narrative)
 
-        top_customers = results.sort_values("Churn_Probability", ascending=False).head(10)
-        pdf = generate_pdf(churn_rate, churn_count, stay_count,
-                           geo_buf, age_buf, gender_buf, products_buf, tenure_buf,
-                           top_customers)
-        st.download_button("📥 Download PDF Report", pdf, "churn_report.pdf", "application/pdf")
-
+        # Save results for later tabs
         st.session_state["results"] = results
+        st.session_state["buffers"] = (geo_buf, age_buf, gender_buf, products_buf, tenure_buf)
 
 # ---------------- Tab 3: Explainability ----------------
 with tabs[2]:
@@ -263,9 +280,7 @@ with tabs[2]:
             "Balance","NumOfProducts","HasCrCard","IsActiveMember","EstimatedSalary"
         ]])
 
-        # ✅ Friendly naming here
         friendly_map = {
-            # Raw
             "CreditScore": "Credit Score",
             "Geography": "Country",
             "Gender": "Gender",
@@ -276,17 +291,6 @@ with tabs[2]:
             "HasCrCard": "Has Credit Card",
             "IsActiveMember": "Active Member",
             "EstimatedSalary": "Estimated Salary",
-
-            # Encoded
-            "num__CreditScore": "Credit Score",
-            "num__Age": "Age",
-            "num__Tenure": "Tenure (Years)",
-            "num__Balance": "Account Balance",
-            "num__NumOfProducts": "Number of Products",
-            "num__HasCrCard": "Has Credit Card",
-            "num__IsActiveMember": "Active Member",
-            "num__EstimatedSalary": "Estimated Salary",
-
             "cat__Gender_Female": "Gender = Female",
             "cat__Gender_Male": "Gender = Male",
             "cat__Geography_France": "Country = France",
@@ -300,16 +304,14 @@ with tabs[2]:
                 row_trans = model.named_steps["preprocessor"].transform(row)
             else:
                 row_trans = row
-
             shap_values = explainer(row_trans)
-
             st.subheader("Local Explanation")
             try:
                 shap.plots.waterfall(shap_values[0], show=False)
                 st.pyplot(plt.gcf()); plt.clf()
             except Exception:
                 vals = shap_values.values[0]
-                if vals.ndim == 2 and vals.shape[1] == 2:  # binary classification
+                if vals.ndim == 2 and vals.shape[1] == 2:
                     vals = vals[:, 1]
                 st.bar_chart(pd.Series(vals, index=feature_names))
     else:
@@ -332,7 +334,7 @@ with tabs[3]:
             costs.append(exp_fn+exp_fp)
         best_thr = grid[np.argmin(costs)]
         st.metric("Suggested Threshold", f"{best_thr:.2f}")
-        col = st.columns([1,3,1])  # center the plot
+        col = st.columns([1,3,1])
         with col[1]:
             fig, ax = plt.subplots(figsize=(5,3))
             ax.plot(grid, costs, label="Expected Cost")
@@ -340,7 +342,11 @@ with tabs[3]:
             ax.set_xlabel("Threshold")
             ax.set_ylabel("Cost")
             ax.legend()
-            st.pyplot(fig)
+            threshold_buf = save_and_show(fig)
+
+        # Save for PDF
+        st.session_state["threshold_buf"] = threshold_buf
+        st.session_state["best_thr"] = best_thr
     else:
         st.info("Upload data first.")
 
@@ -356,9 +362,31 @@ with tabs[4]:
         at_risk_revenue = at_risk_customers * arpu * horizon
         st.metric("At-Risk Customers", at_risk_customers)
         st.metric("At-Risk Revenue", f"${at_risk_revenue:,.0f}")
+
+        # Save KPI text for PDF
+        st.session_state["kpi_text"] = {
+            "customers": f"At-Risk Customers: {at_risk_customers}",
+            "revenue": f"At-Risk Revenue: ${at_risk_revenue:,.0f}"
+        }
+
+        # Add PDF download here
+        if "buffers" in st.session_state and "threshold_buf" in st.session_state:
+            geo_buf, age_buf, gender_buf, products_buf, tenure_buf = st.session_state["buffers"]
+            threshold_buf = st.session_state["threshold_buf"]
+            kpi_text = st.session_state.get("kpi_text", {"customers": "", "revenue": ""})
+            top_customers = results.sort_values("Churn_Probability", ascending=False).head(10)
+            churn_rate = results["Churn_Prediction"].mean() * 100
+            churn_count = results["Churn_Prediction"].sum()
+            stay_count = len(results) - churn_count
+
+            pdf = generate_pdf(
+                churn_rate, churn_count, stay_count,
+                geo_buf, age_buf, gender_buf, products_buf, tenure_buf,
+                top_customers, kpi_text, threshold_buf
+            )
+            st.download_button("📥 Download Full PDF Report", pdf, "churn_report.pdf", "application/pdf")
     else:
         st.info("Upload data first.")
-
 # ---------------- Tab 6: About ----------------
 with tabs[5]:
     st.header("ℹ️ About")
