@@ -40,14 +40,14 @@ def generate_narrative(results: pd.DataFrame) -> str:
     churn_tenure = results.groupby("Tenure")["Churn_Prediction"].mean()
 
     narrative = f"Overall churn rate is {churn_rate:.1f}%, "
-    if len(churn_geo):
-        narrative += f"Highest churn is in {churn_geo.idxmax()}, "
-    if len(churn_gender):
-        narrative += f"{churn_gender.idxmax()} customers churn more, "
-    if len(churn_products):
-        narrative += f"Customers with {int(churn_products.idxmax())} products churn the most, "
-    if len(churn_tenure):
-        narrative += f"Churn peaks at {int(churn_tenure.idxmax())} years of tenure."
+    # if len(churn_geo):
+    #     narrative += f"Highest churn is in {churn_geo.idxmax()}, "
+    # if len(churn_gender):
+    #     narrative += f"{churn_gender.idxmax()} customers churn more, "
+    # if len(churn_products):
+    #     narrative += f"Customers with {int(churn_products.idxmax())} products churn the most, "
+    # if len(churn_tenure):
+    #     narrative += f"Churn peaks at {int(churn_tenure.idxmax())} years of tenure."
     return narrative
 
 # =========================
@@ -281,6 +281,7 @@ with tabs[2]:
         ]])
 
         friendly_map = {
+            # Raw
             "CreditScore": "Credit Score",
             "Geography": "Country",
             "Gender": "Gender",
@@ -291,6 +292,17 @@ with tabs[2]:
             "HasCrCard": "Has Credit Card",
             "IsActiveMember": "Active Member",
             "EstimatedSalary": "Estimated Salary",
+
+            # Encoded
+            "num__CreditScore": "Credit Score",
+            "num__Age": "Age",
+            "num__Tenure": "Tenure (Years)",
+            "num__Balance": "Account Balance",
+            "num__NumOfProducts": "Number of Products",
+            "num__HasCrCard": "Has Credit Card",
+            "num__IsActiveMember": "Active Member",
+            "num__EstimatedSalary": "Estimated Salary",
+
             "cat__Gender_Female": "Gender = Female",
             "cat__Gender_Male": "Gender = Male",
             "cat__Geography_France": "Country = France",
