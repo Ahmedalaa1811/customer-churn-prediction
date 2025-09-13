@@ -126,8 +126,6 @@ CreditScore,Geography,Gender,Age,Tenure,Balance,NumOfProducts,HasCrCard,IsActive
 ### Explainability (SHAP)  
 ![SHAP Explainability](screenshots/shap_explainability.png)
 
-### PDF Export Example  
-![PDF Export](screenshots/pdf_report.png)
 
 ---
 
